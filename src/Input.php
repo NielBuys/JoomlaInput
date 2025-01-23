@@ -167,7 +167,7 @@ class Input implements \Serializable, \Countable
 	 * @since   1.0
 	 * @see     Countable::count()
 	 */
-	public function count()
+	public function count(): int
 	{
 		return \count($this->data);
 	}
@@ -368,7 +368,7 @@ class Input implements \Serializable, \Countable
 	 *
 	 * @since   1.0
 	 */
-	public function serialize()
+	public function serialize(): array
 	{
 		// Load all of the inputs.
 		$this->loadAllInputs();
@@ -377,8 +377,29 @@ class Input implements \Serializable, \Countable
 		$inputs = $this->inputs;
 		unset($inputs['env'], $inputs['server']);
 
-		// Serialize the options, data, and inputs.
-		return serialize(array($this->options, $this->data, $inputs));
+		// Return an array representation of the object's state.
+		return [
+			'options' => $this->options,
+			'data' => $this->data,
+			'inputs' => $inputs,
+		];
+	}
+	
+	public function __serialize(): array
+	{
+		// Load all of the inputs.
+		$this->loadAllInputs();
+	
+		// Remove $_ENV and $_SERVER from the inputs.
+		$inputs = $this->inputs;
+		unset($inputs['env'], $inputs['server']);
+	
+		// Return an array representation of the object's state.
+		return [
+			'options' => $this->options,
+			'data' => $this->data,
+			'inputs' => $inputs,
+		];
 	}
 
 	/**
@@ -391,6 +412,21 @@ class Input implements \Serializable, \Countable
 	 * @since   1.0
 	 */
 	public function unserialize($input)
+	{
+		// Unserialize the options, data, and inputs.
+		list($this->options, $this->data, $this->inputs) = unserialize($input);
+
+		// Load the filter.
+		if (isset($this->options['filter']))
+		{
+			$this->filter = $this->options['filter'];
+		}
+		else
+		{
+			$this->filter = new Filter\InputFilter;
+		}
+	}
+	public function __unserialize($input)
 	{
 		// Unserialize the options, data, and inputs.
 		list($this->options, $this->data, $this->inputs) = unserialize($input);
